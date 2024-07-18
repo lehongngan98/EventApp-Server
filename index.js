@@ -1,17 +1,25 @@
 
 const express = require('express')
 
-const cors = require('cors')
-
+const cors = require('cors');
+const authRouter = require('./routers/authRouter');
+const connectDB = require('./configs/connectDB');
+const errorMiddleHandle = require('./middlewares/errorMiddleWare');
+const dotenv = require('dotenv');
 const app = express()
 
+dotenv.config();
+
 app.use(cors())
+app.use(express.json())
+connectDB();
 
 const PORT = 3000;
 
-app.get('/auth/hello',(req,res) =>{
-    res.send('Hello World')
-})
+app.use('/auth', authRouter);
+
+app.use(errorMiddleHandle);
+
 
 app.listen(PORT,(err) =>{
     if(err){
