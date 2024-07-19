@@ -34,7 +34,7 @@ const register = asyncHandler(async (req, res) => {
             id: newUser.id,
             email: newUser.email,
             fullname: newUser.fullname,
-            AccessToken: await getJWT(email, newUser.id),
+            accesstoken: await getJWT(email, newUser.id),
         }
         
     });
@@ -43,6 +43,37 @@ const register = asyncHandler(async (req, res) => {
 });
 
 
+const login = asyncHandler ( async (req, res) => {
+    const { email, password} = req.body;
+
+    const existUser = await UserModel.findOne({email});
+
+    if(!existUser){
+        res.status(400).json({message: "User not found"});
+        throw new Error("User not found");    
+    }
+
+    const isMatch = await bcrypt.compare(password, existUser.password);
+
+    if(!isMatch){
+        res.status(401).json({message: "Password is incorrect"});
+        throw new Error("Password is incorrect");
+    }
+
+    
+    res.status(200).json({
+        message: "Login success",
+        data: {
+            id: existUser.id,
+            email: existUser.email,
+            fullname: existUser.fullname,
+            accesstoken: await getJWT(email, existUser.id),
+        }
+    });
+});
+
 module.exports = {
-    register
+    register,
+    login,
+    
 }
