@@ -43,7 +43,6 @@ const handleSendEmail = async (val) => {
     }
 };
 
-
 const verification = asyncHandler(async (req, res) => {
     const { email } = req.body || {};
 
@@ -83,8 +82,6 @@ const verification = asyncHandler(async (req, res) => {
 
 });
 
-
-
 const register = asyncHandler(async (req, res) => {
     const { email, fullname, password } = req.body;
 
@@ -113,9 +110,6 @@ const register = asyncHandler(async (req, res) => {
 
     console.log(newUser);
 });
-
-
-
 
 const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
@@ -146,7 +140,6 @@ const login = asyncHandler(async (req, res) => {
     });
 });
 
-
 const forgotPassword = asyncHandler(async (req, res) => {
     const { email } = req.body;
     const randPassword = (Math.random() * 900000 + 100000).toFixed(0); // Ensure password is a string
@@ -171,9 +164,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
     await UserModel.findByIdAndUpdate(user._id, {
         password: hashedPassword,
         isChangePassword: true,
-    }).then(()=>{
+    }).then(() => {
         console.log("update password successfully!");
-    }).catch((error)=>{
+    }).catch((error) => {
         console.log("error update password");
     })
 
@@ -190,11 +183,43 @@ const forgotPassword = asyncHandler(async (req, res) => {
     });
 })
 
+const handleLoginWithGoogle = asyncHandler(async (req, res) => {
+    const userInfo = req.body;
+
+    const existingUser = await UserModel.findOne({ email: userInfo.email });
+
+    let user = userInfo;
+
+    if (existingUser) {
+        await UserModel.findByIdAndUpdate(existingUser._id, userInfo);
+
+        user.accesstoken = await getJWT(userInfo.email, userInfo.id);
+    } else {
+        const newUser = new UserModel({
+            email: userInfo.email,
+            fullname: userInfo.name,
+            photoURL: userInfo.photo,
+            ...userInfo,
+        });
+
+        await newUser.save();
+
+        user.accesstoken = await getJWT(userInfo.email, newUser._id);
+    }
+
+    res.status(200).json({
+        message: "Login with google successfully!",
+        data: user,
+        status: 200
+    });
+});
+
 
 module.exports = {
     register,
     login,
     verification,
     forgotPassword,
+    handleLoginWithGoogle,
 
 }
